@@ -135,15 +135,14 @@ body {
   cursor: pointer;
   z-index: 999;
 }
-
 .list {
   list-style: none;
   padding: 0.8rem 0;
-  overflow: scroll;
-}
-
-.list-watched {
-  height: calc(100% - 9rem);
+  overflow-y: auto; /* Mengganti 'scroll' agar scrollbar hanya muncul jika diperlukan */
+  overflow-x: hidden;
+  max-height: calc(
+    100% - 3rem
+  ); /* Menambahkan batas tinggi agar tidak keluar dari parent container */
 }
 
 .list li {
@@ -154,27 +153,21 @@ body {
   column-gap: 2.4rem;
   font-size: 1.6rem;
   align-items: center;
-
   padding: 1.6rem 3.2rem;
   border-bottom: 1px solid var(--color-background-100);
-}
-
-.list.list-movies li {
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.list.list-movies li:hover {
-  background-color: var(--color-background-100);
+  box-sizing: content-box; /* Menambahkan ini untuk memastikan bahwa padding tidak mempengaruhi lebar total elemen */
 }
 
 .list img {
   width: 100%;
+  max-width: 100%; /* Memastikan gambar tidak melebihi lebar parent container */
   grid-row: 1 / -1;
+  object-fit: cover; /* Menyesuaikan objek gambar untuk memenuhi dengan mempertahankan aspek rasio */
 }
 
 .list h3 {
   font-size: 1.8rem;
+  margin: 0; /* Menghapus margin bawaan pada elemen 'h3' */
 }
 
 .list div {
@@ -189,10 +182,14 @@ body {
   gap: 0.8rem;
 }
 
+.list.list-movies li:hover,
+.list.list-watched li:hover {
+  background-color: var(--color-background-100);
+}
+
 .btn-delete {
   position: absolute;
   right: 2.4rem;
-
   height: 1.8rem;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -209,7 +206,22 @@ body {
   background-color: var(--color-red-dark);
 }
 
-/* ******* */
+.summary h2 {
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.summary p {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.details img {
+  width: 100%; /* Memastikan gambar tidak melebihi lebar parent container */
+  max-width: 100%; /* Menambahkan ini untuk memastikan bahwa gambar tidak melebihi lebar parent container */
+}
 
 .summary {
   padding: 2.2rem 3.2rem 1.8rem 3.2rem;

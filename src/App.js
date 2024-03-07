@@ -174,7 +174,7 @@ function WatchedItem({ movie, onDeleteWatched }) {
 function WatchedList({ watched, onDeleteWatched }) {
   return (
     <>
-      <ul className="list">
+      <ul className="list list-watched">
         {watched.map((movie) => (
           <WatchedItem
             key={movie.imdbID}
