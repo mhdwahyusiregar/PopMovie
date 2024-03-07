@@ -142,7 +142,7 @@ function WatchSummary({ watched }) {
   );
 }
 
-function WatchedItem({ movie }) {
+function WatchedItem({ movie, onDeleteWatched }) {
   return (
     <li key={movie.imdbID}>
       <img src={movie.poster} alt={`${movie.title} poster`} />
@@ -160,17 +160,27 @@ function WatchedItem({ movie }) {
           <span>⏳</span>
           <span>{movie.runtime} min</span>
         </p>
+        <button
+          className="btn-delete"
+          onClick={() => onDeleteWatched(movie.imdbID)}
+        >
+          X
+        </button>
       </div>
     </li>
   );
 }
 
-function WatchedList({ watched }) {
+function WatchedList({ watched, onDeleteWatched }) {
   return (
     <>
       <ul className="list">
         {watched.map((movie) => (
-          <WatchedItem key={movie.imdbID} movie={movie} />
+          <WatchedItem
+            key={movie.imdbID}
+            movie={movie}
+            onDeleteWatched={onDeleteWatched}
+          />
         ))}
       </ul>
     </>
@@ -199,6 +209,9 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWacthed, watched }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const isWatched = watched.some((movie) => movie.imdbID === selectedId);
+  const userRatingWatched = watched.find(
+    (movie) => movie.imdbID === selectedId,
+  )?.userRating;
 
   const {
     Title: title,
@@ -239,6 +252,15 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWacthed, watched }) {
     }
     getMovieDetails();
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!title) return;
+    document.title = `PopMovie | ${title} - ${year}`;
+
+    return () => {
+      document.title = 'PopMovie';
+    };
+  }, [title, year]);
 
   return (
     <div className="details">
@@ -283,12 +305,17 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWacthed, watched }) {
                     size={24}
                     onSetRating={setUserRating}
                   />
-                  <button className="btn-add" onClick={handleAddWatched}>
-                    + Add to Watched
-                  </button>
+                  {userRating > 0 && (
+                    <button className="btn-add" onClick={handleAddWatched}>
+                      + Add to Watched
+                    </button>
+                  )}
                 </>
               ) : (
-                <p>you have watched this movie already</p>
+                <p>
+                  you have watched this movie with a rating of{' '}
+                  {userRatingWatched} / 10
+                </p>
               )}
             </div>
           </section>
@@ -334,17 +361,23 @@ export default function App() {
     setWatched((watched) => [...watched, movie]);
   }
 
+  function handleDeleteWatched(id) {
+    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
+  }
+
   function handleCloseMovie() {
     setSelectedMovieId(null);
   }
 
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchMovie() {
       try {
         setIsLoading(true);
         setError('');
         const res = await fetch(
           `http://www.omdbapi.com/?s=${query}&apikey=${API_KEY}`,
+          { signal: controller.signal },
         );
 
         if (!res.ok) {
@@ -357,7 +390,11 @@ export default function App() {
         }
 
         setMovies(data.Search);
+        setError('');
       } catch (error) {
+        if (error.name === 'AbortError') {
+          return;
+        }
         setError(error.message);
       } finally {
         setIsLoading(false);
@@ -370,6 +407,9 @@ export default function App() {
       return;
     }
     fetchMovie();
+    return function () {
+      controller.abort();
+    };
   }, [query]);
 
   return (
@@ -398,7 +438,10 @@ export default function App() {
           ) : (
             <>
               <WatchSummary watched={watched} />
-              <WatchedList watched={watched} />
+              <WatchedList
+                watched={watched}
+                onDeleteWatched={handleDeleteWatched}
+              />
             </>
           )}
         </BoxMovies>
